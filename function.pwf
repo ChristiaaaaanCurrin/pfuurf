@@ -1,0 +1,102 @@
+
+
+Eq (= : Pred2, A : Pred1) {
+  [
+    EqR {
+      sym : A x -> x = y -> y = x;
+      trn : A x -> x = y -> y = z -> x = z;
+      clo : x = ~ A -> A x;
+
+      sym (py : A y, eq : x = y) : y = x {sym (clo (eq @ py) eq}
+      clo (peqy : = y ~ A) : A y { eq1 : x = y @ px : A x # peqy; eq2 : y = x # sim px eq; clo eq2 @ px}
+    }
+  
+    EqL {
+      sym : A y -> x = y -> y = x;
+      trn : A x -> x = y -> y = z -> x = z;
+      clo : = y ~ A -> A y;
+
+      sym (px : A x, eq : x = y) : y = x {sym (clo (px @ eq)) eq}
+      clo (px : x = ~ A) : A x {eq : x = y @ py : A y # inx; clo ( sym py eq @ py}
+    }
+  ]
+
+  trn (py : A y, eq1 : x = y, eq2 : y = z) : x = z {px : A x # clo eq1 @ py; trn px eq1 eq2}
+  trn (pz : A z, eq1 : x = y, eq2 : y = z) : x = z {py : A y # clo eq2 @ pz; trn py eq1 eq2}
+}
+
+!!INFIX % 8
+% (fg : Pred2, f : Pred2, g : Pred2){
+  Compose {
+    comp : z ~ f  y -> y ~ g x -> z ~ fg x;
+    ucmp : z ~ fg x -> z ~ f (g x);
+  }
+}
+
+
+Func1 (f : Pred2, D : Pred1, R : Pred1, = : Pred2) {
+  Func1 {
+    given Eq = R;
+    ser : D x -> R ~ f x;
+    unq : D x -> y1 ~ f x -> y2 ~ f x -> y1 = y2;
+  }
+  
+  clo(px : D x, cy : y ~ f x) : R y {
+    py' : y' ~ R @ cy' : y' ~ f x # ser px;
+    eq  : y' = y # unq px cy' cy;
+    py' @ eq
+	}
+  
+  static
+  compf(pf : f ~ Func1 B C, pg : g ~ Func1 A B, cfg : fg ~ f % g) : fg ~ Func1 A C {
+    serfg # (px : A x) : C ~ fg x {
+      py : y ~ B @ cy : y ~ g x # pg.ser px;
+      pz : z ~ C @ cz : z ~ f y # pf.ser py;
+      e1 : z ~ fg x             # cfg.comp cz cy;
+      (e1 @ pz) : C ~ fg x
+		}
+    
+    unqfg # (px : A x, cz1 : z1 ~ fg x, cz2 : z2 ~ fg x) : z1 ~ z2 {
+      pfy1 : z1 ~ f y1 ? pgy1 : y1 ~ g x # cfg.ucmp cz1;
+      pfy2 : z2 ~ f y2 ? pgy2 : y2 ~ g x # cfg.ucmp cz2;
+      eqy  : y1 ~   y2                   # pg.unq px pgy1 pgy2;
+      py1  : y1 ~ B                      # pg.clo px pgy1;
+      pf.unq py1 pfy1 (pfy2 @ eqy) : z1 ~ z2
+    }
+    
+    Func1 serfg unqfg
+  }
+}
+
+Inject1 (f : Pred2, D : Pred1, R : Pred1) {
+  Inject1 {
+    given Func1 f D R;
+    
+    inj : D x1 -> D x2 -> f x1 ~ f x2 -> x1 ~ x2
+	}
+  
+  static
+	compinj(if : f ~ Inject1 B C, ig : g ~ Inject1 A B, cfg : fg ~ f % g) : fg ~ Inject1 A C {
+    injfg # (px1 : A x1, px2 : A x2, efx : fg x1 ~ fg x2) : x1 ~ x2 {
+      cz1 : z  ~ fg x1 @ cz2 : z  ~ fg x2 # efx;
+      zf1 : z  ~ f y1 ? cy1 : y1 ~ g x1 # cfg.ucmp cz1;
+      zf2 : z  ~ f y2 ? cy2 : y2 ~ g x2 # cfg.ucmp cz2;
+      
+      py1 : B y1 # pg.clo px1 cy1;
+      py2 : B y2 # pg.clo px2 cy2;
+      eqy : y1 ~ y2 # if.inj py1 py2 (zf2 @ zf1);
+      ig.inj px1 px2 (cy2 @ (cy1 @ eqy))
+    }
+    
+    Inject1 (Func1.compf if ig) injfg
+  }
+}
+
+Surject1 (f : Pred2, D : Pred1, R : Pred1) {
+	Surject1 {
+    given Func1 f D R;
+
+  	srj : R y -> y ~ f D
+  }
+}
+
